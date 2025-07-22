@@ -1,2 +1,5 @@
 .venv
 .vscode
+.qodo
+
+**/__pycache__
