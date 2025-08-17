@@ -13,7 +13,7 @@ class ETLTrainingStockFeature(ETLBase):
         self.feature_repository = StockFeatureRepository()
 
     def get_stock_labels(self) -> List[LabelEntity]:
-        stock_labels = self.label_repository.get_labels_not_in_stock_features(type=TradeType.STOCK.value)  # Assuming "1" is the type for stock labels
+        stock_labels = self.label_repository.get_labels_not_in_stock_features()  # Assuming "1" is the type for stock labels
 
         return stock_labels
 

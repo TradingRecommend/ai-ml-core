@@ -8,10 +8,10 @@ from src.database.db import Base
 class LabelEntity(Base):
     __tablename__ = "labels"
 
-    symbol = Column(CHAR(3), primary_key=True)
+    symbol = Column(String, primary_key=True)
     date = Column(CHAR(8), primary_key=True)
     label = Column(Integer, nullable=False)
-    type = Column(String, primary_key=True, comment="1: stock, 2: coin, 3: future")
+    type = Column(String, primary_key=True, comment="1: stock, 2: top-coin, 3: penny-coin, 4: future")
 
 
     @staticmethod
