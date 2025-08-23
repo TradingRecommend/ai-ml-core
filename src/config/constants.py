@@ -14,7 +14,7 @@ MODEL = {
 TOP_COIN_LOGISTIC_FEATURES = ['price_change_ratio', 'volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'volume_mean_50_days_ratio', 'MA7', 'MA20', 'MA50', 'RSI', 'MACD',
             'MACD_signal', 'MACD_hist', 'Stoch_K', 'Stoch_D', 'ADX', 'MFI']
 
-LOGISTIC_FEATURES = ['price_change_ratio', 'volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'MA7', 'MA50', 'MACD',
+STOCK_LOGISTIC_FEATURES = ['price_change_ratio', 'volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'MA7', 'MA50', 'MACD',
             'MACD_signal', 'ADX', 'MFI']
 
 # LOGISTIC_FEATURES = ['volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'MA7', 'MA20', 'MA50', 'MACD', 'ADX', 'MFI']

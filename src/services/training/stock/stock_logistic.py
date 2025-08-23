@@ -15,7 +15,7 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_auc_sco
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 import numpy as np
-from config.constants import LOGISTIC_FEATURES, ModelName, ModelStage
+from config.constants import STOCK_LOGISTIC_FEATURES, ModelName, ModelStage
 from src.config.logger import Logger
 from src.repository.stock_feature import StockFeatureRepository
 from src.services.training.base import TrainMLModelBase
@@ -161,7 +161,7 @@ class StockLogisticModel(TrainMLModelBase):
         
     def run(self):
         # 1. Chuẩn bị dữ liệu
-        X_train, X_test, y_train, y_test, scaler = self.prepare_data(LOGISTIC_FEATURES)
+        X_train, X_test, y_train, y_test, scaler = self.prepare_data(STOCK_LOGISTIC_FEATURES)
 
         # 2. Train model
         best_model, best_params, best_score = self.train_logistic(X_train, y_train)

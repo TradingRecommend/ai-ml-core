@@ -2,6 +2,7 @@ import click
 from config.constants import ModelType, TradeType
 from src.services.prediction.composite import PredictionComposite
 from src.services.prediction.stock.stock_logistic_prediction import StockLogisticPrediction
+from src.services.prediction.top_coin.top_coin_logistic_prediction import TopCoinLogisticPrediction
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.option(
@@ -23,5 +24,7 @@ def prediction(trade_type, model, date):
     
     if trade_type == TradeType.STOCK.name and model == ModelType.LOGISTIC.value:
         prediction_model.add_operation(StockLogisticPrediction(date=date)) 
+    elif trade_type == TradeType.TOP_COIN.name and model == ModelType.LOGISTIC.value:
+        prediction_model.add_operation(TopCoinLogisticPrediction(date=date)) 
 
     prediction_model.run()

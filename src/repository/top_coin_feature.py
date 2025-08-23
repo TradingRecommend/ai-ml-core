@@ -71,6 +71,7 @@ class TopCoinFeatureRepository:
                 where a.date = b.date
                     and a.symbol = b.symbol
                     and a.type = '2'
+                order by a.date, a.symbol
             """
             rows = session.execute(text(sql)).mappings().all()
             return rows
@@ -85,7 +86,7 @@ class TopCoinFeatureRepository:
                 SELECT a.type, b.* FROM targets a, top_coin_features b
                 where b.date = :date
                     and a.symbol = b.symbol
-                    and a.type = '1'
+                    and a.type = '2'
                     and a.status = '1'
             """
             rows = session.execute(text(sql), {'date': date}).mappings().all()
