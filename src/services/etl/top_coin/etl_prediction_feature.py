@@ -6,7 +6,7 @@ from src.entities.target import TargetEntity
 from src.repository.target import TargetRepository
 from src.repository.top_coin_feature import TopCoinFeatureRepository
 from src.services.etl.base import ETLBase
-from src.services.etl.coin.build_feature import BuildTopCoinFeature
+from src.services.etl.top_coin.build_feature import BuildTopCoinFeature
 
 class ETLPredictionTopCoinFeature(ETLBase):
     def __init__(self, date: str):

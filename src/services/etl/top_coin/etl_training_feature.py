@@ -5,7 +5,7 @@ from src.entities.label import LabelEntity
 from src.repository.label import LabelRepository
 from src.repository.top_coin_feature import TopCoinFeatureRepository
 from src.services.etl.base import ETLBase
-from src.services.etl.coin.build_feature import BuildTopCoinFeature
+from src.services.etl.top_coin.build_feature import BuildTopCoinFeature
 
 class ETLTrainingTopCoinFeature(ETLBase):
     def __init__(self):

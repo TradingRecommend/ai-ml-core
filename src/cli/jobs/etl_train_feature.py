@@ -1,6 +1,6 @@
 import click
 from src.config.constants import TradeType
-from src.services.etl.coin.etl_training_feature import ETLTrainingTopCoinFeature
+from src.services.etl.top_coin.etl_training_feature import ETLTrainingTopCoinFeature
 from src.services.etl.composite import ETLComposite
 from src.services.etl.stock.etl_training_feature import ETLTrainingStockFeature
 
