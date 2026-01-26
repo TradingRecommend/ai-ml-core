@@ -51,4 +51,16 @@ class PredictionResultRepository:
             session.commit()
         finally:
             session.close()
+
+    def get_by_date_and_type(self, date: str, type: str, prediction_limit: float) -> List[PredictionResultEntity]:
+        """Retrieve all feature entities."""
+        session = self.db_manager.Session()
+        try:
+            return session.query(PredictionResultEntity).filter(
+                PredictionResultEntity.date == date,
+                PredictionResultEntity.type == type,
+                PredictionResultEntity.prediction >= prediction_limit
+            ).all()
+        finally:
+            session.close()
   

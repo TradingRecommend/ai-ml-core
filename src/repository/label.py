@@ -2,6 +2,7 @@ from typing import List, Optional
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from src.config.constants import TradeType
 from src.entities.label import LabelEntity
 from src.database.db import DatabaseManager
 
@@ -47,19 +48,53 @@ class LabelRepository:
         finally:
             session.close()
 
-    def get_labels_not_in_stock_features(self, type: str) -> list[LabelEntity]:
+    def get_labels_not_in_stock_features(self) -> list[LabelEntity]:
         session = self.db_manager.Session()
         try:
             sql = """
                 SELECT a.*
-                FROM labels a
+                FROM label a
                 WHERE a.type = :type
                 AND (a.symbol || a.date || a.type) NOT IN (
                     SELECT (symbol || date || type)
-                    FROM stock_features
+                    FROM stock_feature
                 )
             """
-            rows = session.execute(text(sql), {'type': type}).mappings().all()
+            rows = session.execute(text(sql), {'type': TradeType.STOCK.value}).mappings().all()
+            return [LabelEntity(**row) for row in rows]
+        finally:
+            session.close()
+
+    def get_labels_not_in_top_coin_features(self) -> list[LabelEntity]:
+        session = self.db_manager.Session()
+        try:
+            sql = """
+                SELECT a.*
+                FROM label a
+                WHERE a.type = :type
+                AND (a.symbol || a.date || a.type) NOT IN (
+                    SELECT (symbol || date || type)
+                    FROM top_coin_feature
+                )
+            """
+            rows = session.execute(text(sql), {'type': TradeType.TOP_COIN.value}).mappings().all()
+            return [LabelEntity(**row) for row in rows]
+        finally:
+            session.close()
+
+    def get_labels_not_in_penny_coin_features(self) -> list[LabelEntity]:
+        session = self.db_manager.Session()
+        try:
+            sql = """
+                SELECT a.*
+                FROM label a
+                WHERE a.type = :type
+                AND (a.symbol || a.date || a.type) NOT IN (
+                    SELECT (symbol || date || type)
+                    FROM penny_coin_feature
+                )
+            """
+            rows = session.execute(text(sql), {'type': TradeType.PENNY_COIN.value}).mappings().all()
             return [LabelEntity(**row) for row in rows]
         finally:
             session.close()

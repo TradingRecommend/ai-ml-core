@@ -1,5 +1,7 @@
 import click
 from src.config.constants import TradeType
+from src.services.etl.penny_coin.etl_training_feature import ETLTrainingPennyCoinFeature
+from src.services.etl.top_coin.etl_training_feature import ETLTrainingTopCoinFeature
 from src.services.etl.composite import ETLComposite
 from src.services.etl.stock.etl_training_feature import ETLTrainingStockFeature
 
@@ -20,5 +22,9 @@ def etl_train_feature(trade_types):
     for trade_type in trade_type_list:
         if trade_type == TradeType.STOCK.name:
             composite_etl.add_operation(ETLTrainingStockFeature()) 
+        elif trade_type == TradeType.TOP_COIN.name:
+            composite_etl.add_operation(ETLTrainingTopCoinFeature())
+        elif trade_type == TradeType.PENNY_COIN.name:
+            composite_etl.add_operation(ETLTrainingPennyCoinFeature())
 
     composite_etl.run()

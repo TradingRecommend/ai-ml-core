@@ -15,19 +15,18 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_auc_sco
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 import numpy as np
-from config.constants import STOCK_LOGISTIC_FEATURES, ModelName, ModelStage
+from config.constants import TOP_COIN_LOGISTIC_FEATURES, ModelName, ModelStage
 from src.config.logger import Logger
-from src.repository.stock_feature import StockFeatureRepository
+from src.repository.top_coin_feature import TopCoinFeatureRepository
 from src.services.training.base import TrainMLModelBase
 from dotenv import load_dotenv
 from mlflow.models.signature import infer_signature
-import statsmodels.api as sm
-from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-class StockLogisticModel(TrainMLModelBase):
+
+class TopCoinLogisticModel(TrainMLModelBase):
     def __init__(self):
-        self.logger = Logger(StockLogisticModel.__name__)
-        self.stock_feature_repository = StockFeatureRepository()
+        self.logger = Logger(TopCoinLogisticModel.__name__)
+        self.top_coin_feature_repository = TopCoinFeatureRepository()
 
         load_dotenv()  # Load environment variables from .env file
         mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
@@ -40,35 +39,31 @@ class StockLogisticModel(TrainMLModelBase):
 
         self.mlclient = mlflow.MlflowClient()
 
-    def get_stock_features(self):
-        stock_features = self.stock_feature_repository.get_training_features()
+    def get_top_coin_features(self):
+        top_coin_features = self.top_coin_feature_repository.get_training_features()
 
-        return stock_features
+        return top_coin_features
     
     def prepare_data(self, LOGISTIC_FEATURES, test_size=0.2, random_state=42):
         self.logger.info("Preparing data for training...")
         
-        stock_features = self.get_stock_features()
-        stock_features_df = pd.DataFrame(stock_features)
-        print(stock_features_df[['date', 'symbol']])
-
-        outliers = self.detect_outliers(stock_features_df, LOGISTIC_FEATURES)
-        print(f"Detected {len(outliers)} outliers, removing them from the dataset.")
-        print(outliers)
-        stock_features_df = stock_features_df.drop(index=outliers)
+        top_coin_features = self.get_top_coin_features()
+        top_coin_features_df = pd.DataFrame(top_coin_features)
 
         """Chuẩn bị dữ liệu train/test và scale"""
-        X = stock_features_df[LOGISTIC_FEATURES].dropna()
-        y = stock_features_df['label'].loc[X.index]
+        X = top_coin_features_df[LOGISTIC_FEATURES].dropna()
+        y = top_coin_features_df['label'].loc[X.index]
 
         # Chia dữ liệu
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_size, stratify=y, random_state=random_state
         )
 
-        summary = self.check_feature_significance(X_train, y_train, LOGISTIC_FEATURES)
-        print(summary)
-
+        print(f"X_train shape: {X_test}, y_train shape: {y_test}")
+        print("sklearn:", sklearn.__version__)
+        print("numpy:", np.__version__)
+        print("pandas:", pd.__version__)
+        print("X shape:", X.shape)
         print("y distribution:", y.value_counts() if hasattr(y, "value_counts") else np.bincount(y))
         print("first rows:", X[:5])
 
@@ -165,52 +160,9 @@ class StockLogisticModel(TrainMLModelBase):
 
             return run.info.run_id
         
-    def detect_outliers(self, df, features, threshold=1.5):
-        self.logger.info("Detecting outliers using IQR...")
-        outlier_indices = set()
-
-        for col in features:
-            Q1 = df[col].quantile(0.25)
-            Q3 = df[col].quantile(0.75)
-            IQR = Q3 - Q1
-            lower_bound = Q1 - threshold * IQR
-            upper_bound = Q3 + threshold * IQR
-
-            outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)].index
-            outlier_indices.update(outliers)
-
-        self.logger.info(f"Found {len(outlier_indices)} outliers across features")
-        return list(outlier_indices)
-
-
-    def calculate_vif(self, X, feature_names):
-        self.logger.info("Calculating VIF to detect multicollinearity...")
-        vif_data = pd.DataFrame()
-        vif_data["feature"] = feature_names
-        vif_data["VIF"] = [variance_inflation_factor(X, i) for i in range(X.shape[1])]
-        return vif_data
-
-    def check_feature_significance(self, X, y, feature_names):
-        self.logger.info("Checking feature significance with statsmodels...")
-        X_const = sm.add_constant(X)
-        try:
-            logit_model = sm.Logit(y, X_const)
-            result = logit_model.fit(disp=0)
-
-            summary_df = pd.DataFrame({
-                "feature": ["const"] + feature_names,
-                "coef": result.params.values,
-                "p_value": result.pvalues.values
-            })
-            return summary_df
-        except np.linalg.LinAlgError as e:
-            vif = self.calculate_vif(X, feature_names)
-            self.logger.info(f"VIF values:\n{vif}")
-            return pd.DataFrame()
-        
     def run(self):
         # 1. Chuẩn bị dữ liệu
-        X_train, X_test, y_train, y_test, scaler = self.prepare_data(STOCK_LOGISTIC_FEATURES)
+        X_train, X_test, y_train, y_test, scaler = self.prepare_data(TOP_COIN_LOGISTIC_FEATURES)
 
         # 2. Train model
         best_model, best_params, best_score = self.train_logistic(X_train, y_train)
@@ -223,8 +175,6 @@ class StockLogisticModel(TrainMLModelBase):
         # 4. Log MLflow
         input_example = X_train[:5]
         signature = infer_signature(X_train, best_model.predict(X_train))
-        print(best_model.predict_proba(X_test))
-        print(y_test)
 
         self.log_mlflow(
             best_model,
@@ -233,7 +183,7 @@ class StockLogisticModel(TrainMLModelBase):
             scaler,
             input_example,
             signature,
-            model_name=ModelName.STOCK_LOGISTIC_REGRESSION.value,
+            model_name=ModelName.TOP_COIN_LOGISTIC_REGRESSION.value,
             mlclient=self.mlclient,
             stage=ModelStage.get_state()
         )

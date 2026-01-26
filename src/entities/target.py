@@ -4,10 +4,10 @@ from src.config.constants import TradeType
 from src.database.db import Base
 
 class TargetEntity(Base):
-    __tablename__ = "targets"
+    __tablename__ = "target"
 
-    symbol = Column(CHAR(3), primary_key=True)
-    type = Column(String, primary_key=True, comment="1: stock, 2: coin, 3: future")
+    symbol = Column(String, primary_key=True)
+    type = Column(String, primary_key=True, comment="1: stock, 2: top-coin, 3: penny-coin, 4: future")
     status = Column(Integer, nullable=False)
 
 

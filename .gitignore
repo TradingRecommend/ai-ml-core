@@ -3,3 +3,7 @@
 .qodo
 
 **/__pycache__
+
+**/*.pkl
+
+**.env

@@ -4,12 +4,12 @@ from src.config.constants import TradeType
 from src.database.db import Base
 
 class PredictionResultEntity(Base):
-    __tablename__ = "prediction_results"
+    __tablename__ = "prediction_result"
 
-    symbol = Column(CHAR(3), primary_key=True)
+    symbol = Column(String, primary_key=True)
     date = Column(CHAR(8), primary_key=True)
     version = Column(String, primary_key=True)
-    type = Column(String, primary_key=True, comment="1: stock, 2: coin, 3: future")
+    type = Column(String, primary_key=True, comment="1: stock, 2: top-coin, 3: penny-coin, 4: future")
     prediction = Column(Double, nullable=False)
 
 

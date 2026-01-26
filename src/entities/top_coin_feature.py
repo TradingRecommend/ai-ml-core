@@ -6,8 +6,8 @@ from src.database.db import Base
 
 
 
-class StockFeatureEntity(Base):
-    __tablename__ = 'stock_feature'
+class TopCoinFeatureEntity(Base):
+    __tablename__ = 'top_coin_feature'
     date = Column(CHAR(8),  primary_key=True)  # Assuming date is stored as an integer (e.g., YYYYMMDD)
     symbol = Column(String,  primary_key=True)
     volume = Column(Float)

@@ -2,16 +2,16 @@ from typing import List, Optional
 
 import pandas as pd
 from sqlalchemy import text
-from src.entities.stock_feature import StockFeatureEntity
 from src.database.db import DatabaseManager
+from src.entities.penny_coin_feature import PennyCoinFeatureEntity
 
-class StockFeatureRepository:
+class PennyCoinFeatureRepository:
     def __init__(self):
         """Initialize repository with a DatabaseManager instance."""
         self.db_manager = DatabaseManager()
-        StockFeatureEntity.metadata.create_all(self.db_manager.get_engine())
+        PennyCoinFeatureEntity.metadata.create_all(self.db_manager.get_engine())
         
-    def save_multiple(self, features: List[StockFeatureEntity]) -> None:
+    def save_multiple(self, features: List[PennyCoinFeatureEntity]) -> None:
         """Save multiple feature entities to the database."""
         session = self.db_manager.Session()
         try:
@@ -20,7 +20,7 @@ class StockFeatureRepository:
         finally:
             session.close()
 
-    def save(self, feature: StockFeatureEntity) -> None:
+    def save(self, feature: PennyCoinFeatureEntity) -> None:
         """Save a single feature entity to the database."""
         session = self.db_manager.Session()
         try:
@@ -36,19 +36,19 @@ class StockFeatureRepository:
         session = self.db_manager.Session()
         try:
             for data in datas:
-                session.query(StockFeatureEntity).filter(
-                    StockFeatureEntity.symbol == data.get('symbol'),
-                    StockFeatureEntity.date == data.get('date')
+                session.query(PennyCoinFeatureEntity).filter(
+                    PennyCoinFeatureEntity.symbol == data.get('symbol'),
+                    PennyCoinFeatureEntity.date == data.get('date')
                 ).delete(synchronize_session=False)
             session.commit()
         finally:
             session.close()
 
-    def get_all(self) -> List[StockFeatureEntity]:
+    def get_all(self) -> List[PennyCoinFeatureEntity]:
         """Retrieve all feature entities."""
         session = self.db_manager.Session()
         try:
-            return session.query(StockFeatureEntity).all()
+            return session.query(PennyCoinFeatureEntity).all()
         finally:
             session.close()
 
@@ -56,7 +56,7 @@ class StockFeatureRepository:
     def save_from_dataframe(self, df: pd.DataFrame) -> None:
         engine = self.db_manager.get_engine()
         df.to_sql(
-            name=StockFeatureEntity.__tablename__,  # Replace with your actual table name if different
+            name=PennyCoinFeatureEntity.__tablename__,  # Replace with your actual table name if different
             con=engine,
             if_exists='append',
             index=False,
@@ -67,11 +67,11 @@ class StockFeatureRepository:
         session = self.db_manager.Session()
         try:
             sql = """
-                SELECT a.label, b.* FROM label a, stock_feature b
+                SELECT a.label, b.* FROM label a, penny_coin_feature b
                 where a.date = b.date
                     and a.symbol = b.symbol
-                    and a.type = '1'
-                order by b.date, b.symbol
+                    and a.type = '3'
+                order by a.date, a.symbol
             """
             rows = session.execute(text(sql)).mappings().all()
             return rows
@@ -83,10 +83,10 @@ class StockFeatureRepository:
         session = self.db_manager.Session()
         try:
             sql = """
-                SELECT a.type, b.* FROM target a, stock_feature b
+                SELECT a.type, b.* FROM target a, penny_coin_feature b
                 where b.date = :date
                     and a.symbol = b.symbol
-                    and a.type = '1'
+                    and a.type = '3'
                     and a.status = '1'
             """
             rows = session.execute(text(sql), {'date': date}).mappings().all()
