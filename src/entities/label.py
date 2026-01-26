@@ -6,7 +6,7 @@ from src.database.db import Base
 
 
 class LabelEntity(Base):
-    __tablename__ = "labels"
+    __tablename__ = "label"
 
     symbol = Column(String, primary_key=True)
     date = Column(CHAR(8), primary_key=True)

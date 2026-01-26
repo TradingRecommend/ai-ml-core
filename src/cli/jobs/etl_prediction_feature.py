@@ -1,5 +1,6 @@
 import click
 from src.config.constants import TradeType
+from src.services.etl.penny_coin.etl_prediction_feature import ETLPredictionPennyCoinFeature
 from src.services.etl.top_coin.etl_prediction_feature import ETLPredictionTopCoinFeature
 from src.services.etl.composite import ETLComposite
 from src.services.etl.stock.etl_prediction_feature import ETLPredictionStockFeature
@@ -27,5 +28,7 @@ def etl_prediction_feature(trade_types, date):
             composite_etl.add_operation(ETLPredictionStockFeature(date=date)) 
         elif trade_type == TradeType.TOP_COIN.name:
             composite_etl.add_operation(ETLPredictionTopCoinFeature(date=date))
+        elif trade_type == TradeType.PENNY_COIN.name:
+            composite_etl.add_operation(ETLPredictionPennyCoinFeature(date=date))
 
     composite_etl.run()

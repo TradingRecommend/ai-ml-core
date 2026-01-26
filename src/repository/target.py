@@ -46,3 +46,11 @@ class TargetRepository:
             session.commit()
         finally:
             session.close()
+
+    def delete_by_type_value(self, type: str) -> None:
+        session = self.db_manager.Session()
+        try:
+            session.query(TargetEntity).filter_by(type=type).delete()
+            session.commit()
+        finally:
+            session.close()

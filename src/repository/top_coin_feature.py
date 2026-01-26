@@ -67,7 +67,7 @@ class TopCoinFeatureRepository:
         session = self.db_manager.Session()
         try:
             sql = """
-                SELECT a.label, b.* FROM labels a, top_coin_features b
+                SELECT a.label, b.* FROM label a, top_coin_feature b
                 where a.date = b.date
                     and a.symbol = b.symbol
                     and a.type = '2'
@@ -83,7 +83,7 @@ class TopCoinFeatureRepository:
         session = self.db_manager.Session()
         try:
             sql = """
-                SELECT a.type, b.* FROM targets a, top_coin_features b
+                SELECT a.type, b.* FROM target a, top_coin_feature b
                 where b.date = :date
                     and a.symbol = b.symbol
                     and a.type = '2'

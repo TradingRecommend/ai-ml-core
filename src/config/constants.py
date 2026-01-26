@@ -11,13 +11,17 @@ MODEL = {
     'RANDOM_FOREST': 'RANDOM_FOREST',
 }
 
-TOP_COIN_LOGISTIC_FEATURES = ['price_change_ratio', 'volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'volume_mean_50_days_ratio', 'MA7', 'MA20', 'MA50', 'RSI', 'MACD',
+TOP_COIN_LOGISTIC_FEATURES = ['price_change_ratio', 'volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'MA26_trend', 'MA50_trend', 'MA9_MA26_ratio', 'MA9_MA50_ratio', 'MA26_MA50_ratio', 'MACD',
+            'MACD_signal', 'ADX']
+
+STOCK_LOGISTIC_FEATURES = ['price_change_ratio', 'volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'MA26_trend', 'MA50_trend', 'MA9_MA26_ratio', 'MA9_MA50_ratio', 'MA26_MA50_ratio', 'MACD',
+            'MACD_signal', 'ADX']
+
+PENNY_COIN_LOGISTIC_FEATURES = ['price_change_ratio', 'volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'volume_mean_50_days_ratio', 'MA7', 'MA20', 'MA50', 'RSI', 'MACD',
             'MACD_signal', 'MACD_hist', 'Stoch_K', 'Stoch_D', 'ADX', 'MFI']
 
-STOCK_LOGISTIC_FEATURES = ['price_change_ratio', 'volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'MA7', 'MA50', 'MACD',
-            'MACD_signal', 'ADX', 'MFI']
-
-# LOGISTIC_FEATURES = ['volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'MA7', 'MA20', 'MA50', 'MACD', 'ADX', 'MFI']
+LOGISTIC_FEATURES = ['price_change_ratio', 'volume_mean_7_days_ratio', 'volume_mean_20_days_ratio', 'volume_mean_50_days_ratio', 'MA7', 'MA20', 'MA50', 'RSI', 'MACD',
+            'MACD_signal', 'MACD_hist', 'Stoch_K', 'Stoch_D', 'ADX', 'MFI']
 
 class TradeType(Enum):
     STOCK = "1"
@@ -27,10 +31,11 @@ class TradeType(Enum):
 
     @classmethod
     def choices(cls):
-        return [(cls.STOCK.value, "Stock"), (cls.COIN.value, "Coin"), (cls.FUTURE.value, "Future")]
+        return [(cls.STOCK.value, "Stock"), (cls.TOP_COIN.value, "Top Coin"), (cls.FUTURE.value, "Future"), (cls.PENNY_COIN.value, "Penny Coin")]
 
 class ModelType(Enum):
     LOGISTIC = "LOGISTIC"
+    DECISION_TREE = "DECISION_TREE"
     XGBOOST = "XGBOOST"
     LIGHTGBM = "LIGHTGBM"
     RANDOM_FOREST = "RANDOM_FOREST"
@@ -52,4 +57,6 @@ class ModelStage(Enum):
         
 class ModelName(Enum):
     STOCK_LOGISTIC_REGRESSION = "StockLogisticRegression"
+    STOCK_DECISION_TREE = "StockDecisionTree"
     TOP_COIN_LOGISTIC_REGRESSION = "TopCoinLogisticRegression"
+    PENNY_COIN_LOGISTIC_REGRESSION = "PennyCoinLogisticRegression"

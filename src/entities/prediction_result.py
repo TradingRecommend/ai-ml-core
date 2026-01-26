@@ -4,7 +4,7 @@ from src.config.constants import TradeType
 from src.database.db import Base
 
 class PredictionResultEntity(Base):
-    __tablename__ = "prediction_results"
+    __tablename__ = "prediction_result"
 
     symbol = Column(String, primary_key=True)
     date = Column(CHAR(8), primary_key=True)

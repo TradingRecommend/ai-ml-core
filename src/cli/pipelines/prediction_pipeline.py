@@ -1,9 +1,12 @@
 import click
 from src.config.constants import ModelType, TradeType
 from src.services.etl.composite import ETLComposite
+from src.services.etl.penny_coin.etl_prediction_feature import ETLPredictionPennyCoinFeature
 from src.services.etl.stock.etl_prediction_feature import ETLPredictionStockFeature
 from src.services.etl.top_coin.etl_prediction_feature import ETLPredictionTopCoinFeature
+from src.services.noti.stock.telegram import StockTelegramNotifier
 from src.services.prediction.composite import PredictionComposite
+from src.services.prediction.penny_coin.penny_coin_logistic_prediction import PennyCoinLogisticPrediction
 from src.services.prediction.stock.stock_logistic_prediction import StockLogisticPrediction
 from src.services.prediction.top_coin.top_coin_logistic_prediction import TopCoinLogisticPrediction
 
@@ -36,6 +39,11 @@ def prediction_pipeline(trade_type, model, date):
         
         if model == ModelType.LOGISTIC.value:
             composite_prediction_model.add_operation(TopCoinLogisticPrediction(date=date))
+    elif trade_type == TradeType.PENNY_COIN.name:
+        composite_etl.add_operation(ETLPredictionPennyCoinFeature(date=date)) 
+        
+        if model == ModelType.LOGISTIC.value:
+            composite_prediction_model.add_operation(PennyCoinLogisticPrediction(date=date))
 
 
     # Run the ETL composite
@@ -43,3 +51,7 @@ def prediction_pipeline(trade_type, model, date):
 
     # Run the prediction model
     composite_prediction_model.run()
+
+    if trade_type == TradeType.STOCK.name:
+        notifier = StockTelegramNotifier(date=date)
+        notifier.send_message()

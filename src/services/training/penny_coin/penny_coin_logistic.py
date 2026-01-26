@@ -1,33 +1,28 @@
 import os
-from joblib import dump
 import joblib
-from matplotlib import pyplot as plt
 import mlflow
 import pandas as pd
 import sklearn
 from sklearn.metrics import accuracy_score
-from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import StandardScaler
-from sklearn.feature_selection import RFE
-from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import train_test_split
 import numpy as np
-from config.constants import STOCK_LOGISTIC_FEATURES, ModelName, ModelStage
+from config.constants import PENNY_COIN_LOGISTIC_FEATURES, ModelName, ModelStage
 from src.config.logger import Logger
-from src.repository.stock_feature import StockFeatureRepository
+from src.repository.penny_coin_feature import PennyCoinFeatureRepository
 from src.services.training.base import TrainMLModelBase
 from dotenv import load_dotenv
 from mlflow.models.signature import infer_signature
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
-class StockLogisticModel(TrainMLModelBase):
+class PennyCoinLogisticModel(TrainMLModelBase):
     def __init__(self):
-        self.logger = Logger(StockLogisticModel.__name__)
-        self.stock_feature_repository = StockFeatureRepository()
+        self.logger = Logger(PennyCoinLogisticModel.__name__)
+        self.penny_coin_feature_repository = PennyCoinFeatureRepository()
 
         load_dotenv()  # Load environment variables from .env file
         mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
@@ -40,26 +35,25 @@ class StockLogisticModel(TrainMLModelBase):
 
         self.mlclient = mlflow.MlflowClient()
 
-    def get_stock_features(self):
-        stock_features = self.stock_feature_repository.get_training_features()
+    def get_penny_coin_features(self):
+        features = self.penny_coin_feature_repository.get_training_features()
 
-        return stock_features
+        return features
     
     def prepare_data(self, LOGISTIC_FEATURES, test_size=0.2, random_state=42):
         self.logger.info("Preparing data for training...")
         
-        stock_features = self.get_stock_features()
-        stock_features_df = pd.DataFrame(stock_features)
-        print(stock_features_df[['date', 'symbol']])
+        penny_coin_features = self.get_penny_coin_features()
+        penny_coin_features_df = pd.DataFrame(penny_coin_features)
 
-        outliers = self.detect_outliers(stock_features_df, LOGISTIC_FEATURES)
+        outliers = self.detect_outliers(penny_coin_features_df, LOGISTIC_FEATURES)
         print(f"Detected {len(outliers)} outliers, removing them from the dataset.")
         print(outliers)
-        stock_features_df = stock_features_df.drop(index=outliers)
+        penny_coin_features_df = penny_coin_features_df.drop(index=outliers)
 
         """Chuẩn bị dữ liệu train/test và scale"""
-        X = stock_features_df[LOGISTIC_FEATURES].dropna()
-        y = stock_features_df['label'].loc[X.index]
+        X = penny_coin_features_df[LOGISTIC_FEATURES].dropna()
+        y = penny_coin_features_df['label'].loc[X.index]
 
         # Chia dữ liệu
         X_train, X_test, y_train, y_test = train_test_split(
@@ -207,10 +201,11 @@ class StockLogisticModel(TrainMLModelBase):
             vif = self.calculate_vif(X, feature_names)
             self.logger.info(f"VIF values:\n{vif}")
             return pd.DataFrame()
-        
+
+
     def run(self):
         # 1. Chuẩn bị dữ liệu
-        X_train, X_test, y_train, y_test, scaler = self.prepare_data(STOCK_LOGISTIC_FEATURES)
+        X_train, X_test, y_train, y_test, scaler = self.prepare_data(PENNY_COIN_LOGISTIC_FEATURES)
 
         # 2. Train model
         best_model, best_params, best_score = self.train_logistic(X_train, y_train)
@@ -223,8 +218,6 @@ class StockLogisticModel(TrainMLModelBase):
         # 4. Log MLflow
         input_example = X_train[:5]
         signature = infer_signature(X_train, best_model.predict(X_train))
-        print(best_model.predict_proba(X_test))
-        print(y_test)
 
         self.log_mlflow(
             best_model,
@@ -233,7 +226,7 @@ class StockLogisticModel(TrainMLModelBase):
             scaler,
             input_example,
             signature,
-            model_name=ModelName.STOCK_LOGISTIC_REGRESSION.value,
+            model_name=ModelName.PENNY_COIN_LOGISTIC_REGRESSION.value,
             mlclient=self.mlclient,
             stage=ModelStage.get_state()
         )

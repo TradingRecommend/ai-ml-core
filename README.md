@@ -24,11 +24,17 @@ Follow these steps to install project dependencies:
 docker build --platform=linux/arm64 -t ai-ml-core:v1 .
 
 # Run project in local
+PYTHONPATH=. python src/main.py etl_train_feature_job --trade-types PENNY_COIN
+
 PYTHONPATH=. python src/main.py train_model_job --trade-type TOP_COIN --model LOGISTIC
 
 PYTHONPATH=. python src/main.py prediction_pipeline --trade-type TOP_COIN --model LOGISTIC --date 20250819
 
+PYTHONPATH=. python src/main.py etl_penny_coin_target_job
+
 # Run project in docker
+docker run -v $(pwd)/.prod.env:/app/.env --rm --name my-mlflow-container ai-ml-core:v1 etl_train_feature_job --trade-types STOCK
+
 docker run -v $(pwd)/.prod.env:/app/.env --rm --name my-mlflow-container ai-ml-core:v1 train_model_job --trade-type STOCK --model LOGISTIC
 
 docker run -v $(pwd)/.prod.env:/app/.env --rm --name my-mlflow-container ai-ml-core:v1 prediction_pipeline --trade-type STOCK --model LOGISTIC --date 20250819

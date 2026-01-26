@@ -47,12 +47,12 @@ class TopCoinLogisticModel(TrainMLModelBase):
     def prepare_data(self, LOGISTIC_FEATURES, test_size=0.2, random_state=42):
         self.logger.info("Preparing data for training...")
         
-        stock_features = self.get_top_coin_features()
-        stock_features_df = pd.DataFrame(stock_features)
+        top_coin_features = self.get_top_coin_features()
+        top_coin_features_df = pd.DataFrame(top_coin_features)
 
         """Chuẩn bị dữ liệu train/test và scale"""
-        X = stock_features_df[LOGISTIC_FEATURES].dropna()
-        y = stock_features_df['label'].loc[X.index]
+        X = top_coin_features_df[LOGISTIC_FEATURES].dropna()
+        y = top_coin_features_df['label'].loc[X.index]
 
         # Chia dữ liệu
         X_train, X_test, y_train, y_test = train_test_split(
