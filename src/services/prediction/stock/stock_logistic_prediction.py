@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
-from joblib import load
 import joblib
-import mlflow
+# import mlflow
 import pandas as pd
 from config.constants import STOCK_LOGISTIC_FEATURES, ModelName, ModelStage
 from src.config.logger import Logger
@@ -20,15 +19,15 @@ class StockLogisticPrediction(PredictionBase):
         self.prediction_result_repository = PredictionResultRepository()
 
         load_dotenv()  # Load environment variables from .env file
-        mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
-        mlflow_s3_endpoint_url = os.getenv("MLFLOW_S3_ENDPOINT_URL")
-        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        # mlflow_tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+        # mlflow_s3_endpoint_url = os.getenv("MLFLOW_S3_ENDPOINT_URL")
+        # aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+        # aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
         
-        mlflow.set_tracking_uri(mlflow_tracking_uri)
-        mlflow.sklearn.autolog(disable=True)
+        # mlflow.set_tracking_uri(mlflow_tracking_uri)
+        # mlflow.sklearn.autolog(disable=True)
 
-        self.mlclient = mlflow.MlflowClient()
+        # self.mlclient = mlflow.MlflowClient()
 
     def get_stock_features(self):
         stock_features = self.stock_feature_repository.get_prediction_features(date=self.date)
@@ -37,29 +36,33 @@ class StockLogisticPrediction(PredictionBase):
 
     def get_scaler(self):
         # Get latest model version in Staging
-        latest_versions = self.mlclient.get_latest_versions(
-            name=ModelName.STOCK_LOGISTIC_REGRESSION.value, 
-            stages=[ModelStage.get_state()]
-        )
+        # latest_versions = self.mlclient.get_latest_versions(
+        #     name=ModelName.STOCK_LOGISTIC_REGRESSION.value, 
+        #     stages=[ModelStage.get_state()]
+        # )
 
-        latest_version = latest_versions[0]
-        run_id = latest_version.run_id
+        # latest_version = latest_versions[0]
+        # run_id = latest_version.run_id
 
-        # Download scaler.pkl from that run
-        scaler_path = mlflow.artifacts.download_artifacts(
-            artifact_uri=f"runs:/{run_id}/preprocessing/scaler.pkl"
-        )
+        # # Download scaler.pkl from that run
+        # scaler_path = mlflow.artifacts.download_artifacts(
+        #     artifact_uri=f"runs:/{run_id}/preprocessing/scaler.pkl"
+        # )
 
         # Load scaler
-        scaler = joblib.load(scaler_path)
-
+        # scaler = joblib.load(scaler_path)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(base_dir, "..", "..", '..', "model", "StockLogisticRegression_scaler.pkl")
+        scaler = joblib.load(model_path)  # Optional: save a local copy
         return scaler
     
     def get_model(self):
         # Load model from "Staging"
-        model_uri = f'''models:/{ModelName.STOCK_LOGISTIC_REGRESSION.value}/{ModelStage.get_state()}'''
-        model = mlflow.sklearn.load_model(model_uri)
-
+        # model_uri = f'''models:/{ModelName.STOCK_LOGISTIC_REGRESSION.value}/{ModelStage.get_state()}'''
+        # model = mlflow.sklearn.load_model(model_uri)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(base_dir, "..", "..", '..', "model", "StockLogisticRegression_model.pkl")
+        model = joblib.load(model_path)
         return model
     
     def run(self):

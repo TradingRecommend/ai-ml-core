@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+
 class DatabaseManager:
     _instance = None
     Session: sessionmaker = None
@@ -21,12 +22,14 @@ class DatabaseManager:
             db_host = os.getenv("DB_HOST")
             db_port = os.getenv("DB_PORT")
             db_name = os.getenv("DB_NAME")
-            
+
             if not all([db_user, db_password, db_host, db_port, db_name]):
-                raise ValueError("Missing required database connection parameters in .env file")
-            
+                raise ValueError(
+                    "Missing required database connection parameters in .env file")
+
             connection_string = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-            cls._instance.engine = create_engine(connection_string) 
+            cls._instance.engine = create_engine(connection_string, pool_recycle=180,  # Recycles connections older than 30 mins
+                                                 pool_pre_ping=True)
             cls._instance.Session = sessionmaker(bind=cls._instance.engine)
         return cls._instance
 
