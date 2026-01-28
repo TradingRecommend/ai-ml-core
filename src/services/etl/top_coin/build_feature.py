@@ -1,9 +1,8 @@
 from typing import List
 import requests
-import talib
-from datetime import datetime, timedelta
+import pandas_ta as ta  # Thay đổi từ talib sang pandas_ta
+from datetime import datetime
 import pandas as pd
-
 
 class BuildTopCoinFeature:
     def __init__(self):
@@ -11,17 +10,12 @@ class BuildTopCoinFeature:
 
     @staticmethod
     def get_price_volume_binance(date=str, symbol="BTCUSDT", interval="1d", limit=30):
-        # Convert end_date to Unix timestamp in milliseconds (end of day)
         end_date = datetime.strptime(date, "%Y%m%d")
-        # Set to end of the day (23:59:59.999) to ensure the date is included
-        end_date = end_date.replace(
-            hour=23, minute=59, second=59, microsecond=999999)
-        # Convert to milliseconds
+        end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
         end_time_ms = int(end_date.timestamp() * 1000)
 
         url = "https://api.binance.com/api/v3/klines"
-        params = {"symbol": symbol, "interval": interval,
-                  "limit": limit, "endTime": end_time_ms}
+        params = {"symbol": symbol, "interval": interval, "limit": limit, "endTime": end_time_ms}
         response = requests.get(url, params=params)
         data = response.json()
 
@@ -31,95 +25,86 @@ class BuildTopCoinFeature:
             "taker_buy_base", "taker_buy_quote", "ignore"
         ])
         df["date"] = pd.to_datetime(df["timestamp"], unit="ms")
-        df["close"] = df["close"].astype(float)
-        df["open"] = df["open"].astype(float)
-        df["high"] = df["high"].astype(float)
-        df["low"] = df["low"].astype(float)
-        df["volume"] = df["volume"].astype(float)
+        for col in ["open", "high", "low", "close", "volume"]:
+            df[col] = df[col].astype(float)
         return df[["date", "close", "volume", "open", "high", "low"]]
 
     @staticmethod
     def build_top_coin_features(data: List[object]):
         result_df = pd.DataFrame()
         for item in data:
-            # Ngày kết thúc cụ thể
             end_date = item.get('date', '')
             symbol = item.get('symbol', '')
             symbol_usdt = symbol + "USDT"
 
-            # Lấy dữ liệu lịch sử giá cổ phiếu
-            df = BuildTopCoinFeature.get_price_volume_binance(
-                end_date, symbol_usdt, "1d", 100)
+            # Lấy 150 nến để đảm bảo đủ dữ liệu cho các chỉ báo chu kỳ dài (MA50, MACD)
+            df = BuildTopCoinFeature.get_price_volume_binance(end_date, symbol_usdt, "1d", 150)
 
-            # Đảm bảo cột 'close', 'high', 'low', và 'volume' tồn tại trong dữ liệu
             if not all(col in df.columns for col in ['open', 'close', 'high', 'low', 'volume']):
-                raise ValueError(
-                    "Dữ liệu thiếu các cột cần thiết: 'close', 'volume'")
+                raise ValueError("Dữ liệu thiếu các cột cần thiết")
 
-            # Tính phần trăm tăng/giảm giá
-            df['price_change_ratio'] = (
-                (df['close'] - df['open']) / df['open'])
+            # --- TÍNH TOÁN CƠ BẢN ---
+            df['price_change_ratio'] = (df['close'] - df['open']) / df['open']
 
-            # Calculate the average volume for the last 7 days
-            df['volume_mean_7_days'] = df['volume'].rolling(window=7).mean()
-            df['volume_mean_7_days_ratio'] = df['volume'] / \
-                df['volume_mean_7_days']
+            # Volume Ratios
+            for days in [7, 20, 50]:
+                df[f'volume_mean_{days}_days'] = df['volume'].rolling(window=days).mean()
+                df[f'volume_mean_{days}_days_ratio'] = df['volume'] / df[f'volume_mean_{days}_days']
 
-            df['volume_mean_20_days'] = df['volume'].rolling(window=20).mean()
-            df['volume_mean_20_days_ratio'] = df['volume'] / \
-                df['volume_mean_20_days']
+            # --- PANDAS-TA INDICATORS ---
+            
+            # Moving Averages
+            ma_periods = [7, 9, 14, 18, 20, 26, 50, 52]
+            for p in ma_periods:
+                df[f'MA{p}'] = df.ta.sma(length=p)
 
-            df['volume_mean_50_days'] = df['volume'].rolling(window=50).mean()
-            df['volume_mean_50_days_ratio'] = df['volume'] / \
-                df['volume_mean_50_days']
-
-            # Tính các chỉ số kỹ thuật
-            df['MA7'] = talib.SMA(df['close'], timeperiod=7)   # MA 7 ngày
+            # Các giá trị shift để tính trend
             df['MA7_prev7'] = df['MA7'].shift(7)
-            df['MA9'] = talib.SMA(df['close'], timeperiod=9)   # MA 9 ngày
             df['MA9_prev7'] = df['MA9'].shift(7)
-            df['MA14'] = talib.SMA(df['close'], timeperiod=14)   # MA 14 ngày
-            df['MA18'] = talib.SMA(df['close'], timeperiod=18)   # MA 18 ngày
-            df['MA20'] = talib.SMA(df['close'], timeperiod=20)  # MA 20 ngày
-            df['MA26'] = talib.SMA(df['close'], timeperiod=26)   # MA 26 ngày
             df['MA26_prev7'] = df['MA26'].shift(7)
-            df['MA50'] = talib.SMA(df['close'], timeperiod=50)  # MA 50 ngày
             df['MA50_prev7'] = df['MA50'].shift(7)
-            df['MA52'] = talib.SMA(df['close'], timeperiod=52)  # MA 52 ngày
-            df['RSI'] = talib.RSI(df['close'], timeperiod=14)  # RSI 14 ngày
-            df['MFI'] = talib.MFI(df['high'], df['low'], df['close'],
-                                  df['volume'], timeperiod=14)  # Tính MFI bằng TA-Lib
-            df['MACD'], df['MACD_signal'], df['MACD_hist'] = talib.MACD(
-                df['close'], fastperiod=12, slowperiod=26, signalperiod=9)  # MACD
-            df['Stoch_K'], df['Stoch_D'] = talib.STOCH(
-                # Stochastic Oscillator
-                df['high'], df['low'], df['close'], fastk_period=14, slowk_period=3, slowd_period=3)
-            df['ADX'] = talib.ADX(df['high'], df['low'],
-                                  df['close'], timeperiod=14)  # ADX
 
-            # Get the last row of the DataFrame
-            df_tail = df.tail(1)
+            # RSI & MFI
+            df['RSI'] = df.ta.rsi(length=14)
+            df['MFI'] = df.ta.mfi(length=14)
 
+            # MACD: Trả về DataFrame (MACD_12_26_9, MACDh_12_26_9, MACDs_12_26_9)
+            macd = df.ta.macd(fast=12, slow=26, signal=9)
+            df['MACD'] = macd['MACD_12_26_9']
+            df['MACD_hist'] = macd['MACDh_12_26_9']
+            df['MACD_signal'] = macd['MACDs_12_26_9']
+
+            # Stochastic: Trả về (STOCHk_14_3_3, STOCHd_14_3_3)
+            stoch = df.ta.stoch(high='high', low='low', close='close', k=14, d=3, smooth_k=3)
+            df['Stoch_K'] = stoch['STOCHk_14_3_3']
+            df['Stoch_D'] = stoch['STOCHd_14_3_3']
+
+            # ADX: Trả về (ADX_14, DMP_14, DMN_14)
+            adx = df.ta.adx(length=14)
+            df['ADX'] = adx['ADX_14']
+
+            # --- TRÍCH XUẤT DÒNG CUỐI & RATIOS ---
+            df_tail = df.tail(1).copy()
 
             df_tail['MA9_MA26_ratio'] = df_tail['MA9'] / df_tail['MA26']
             df_tail['MA9_MA50_ratio'] = df_tail['MA9'] / df_tail['MA50']
             df_tail['MA26_MA50_ratio'] = df_tail['MA26'] / df_tail['MA50']
 
-            # MA7 trend (assuming you're using values from df, not df_tail)
             df_tail['MA9_trend'] = df_tail['MA9'] / df_tail['MA9_prev7']
             df_tail['MA26_trend'] = df_tail['MA26'] / df_tail['MA26_prev7']
             df_tail['MA50_trend'] = df_tail['MA50'] / df_tail['MA50_prev7']
 
-            df_tail = df_tail[['date', 'volume', 'open', 'close', 'price_change_ratio', 'volume_mean_7_days_ratio', 
-                    'volume_mean_20_days_ratio', 'volume_mean_50_days_ratio', 'MA7', 'MA9', 'MA14', 'MA18', 'MA20', 'MA26', 'MA50', 'MA52', 'RSI',
-                    'MACD', 'MACD_signal', 'MACD_hist', 'Stoch_K', 'Stoch_D', 'ADX', 'MFI', 'MA9_MA26_ratio',
-                               'MA9_MA50_ratio', 'MA26_MA50_ratio',
-                               'MA9_trend', 'MA26_trend', 'MA50_trend']]
+            # Filter columns
+            cols = ['date', 'volume', 'open', 'close', 'price_change_ratio', 'volume_mean_7_days_ratio', 
+                    'volume_mean_20_days_ratio', 'volume_mean_50_days_ratio', 'MA7', 'MA9', 'MA14', 'MA18', 
+                    'MA20', 'MA26', 'MA50', 'MA52', 'RSI', 'MACD', 'MACD_signal', 'MACD_hist', 
+                    'Stoch_K', 'Stoch_D', 'ADX', 'MFI', 'MA9_MA26_ratio', 'MA9_MA50_ratio', 
+                    'MA26_MA50_ratio', 'MA9_trend', 'MA26_trend', 'MA50_trend']
 
-
-            df_tail['date'] = pd.to_datetime(
-                df_tail['date']).dt.strftime('%Y%m%d')
-            df_tail[['symbol']] = symbol
+            df_tail = df_tail[cols]
+            df_tail['date'] = pd.to_datetime(df_tail['date']).dt.strftime('%Y%m%d')
+            df_tail['symbol'] = symbol
             
             result_df = pd.concat([result_df, df_tail], ignore_index=True)
+            
         return result_df

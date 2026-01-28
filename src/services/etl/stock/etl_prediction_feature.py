@@ -1,3 +1,4 @@
+from time import sleep
 from typing import List
 
 from src.config.constants import TradeType
@@ -47,7 +48,22 @@ class ETLPredictionStockFeature(ETLBase):
     def load(self, feature_df):
         self.logger.info(f"Start load stock features for date: {self.date}")
 
-        self.feature_repository.delete_by_list_symbol_and_date(feature_df.to_dict(orient='records'))
-        self.feature_repository.save_from_dataframe(feature_df)
+        retry_max = 5
+        is_done = False
+        retry_cnt = 0
+        while not is_done:
+            try:
+                self.feature_repository.delete_by_date(self.date)
+                self.feature_repository.save_from_dataframe(feature_df)
+                is_done = True
+            except Exception as e:  
+                self.logger.error(f"Error loading stock features for date: {self.date}. Error: {e}")
+                retry_cnt += 1
+                if retry_cnt >= retry_max:
+                    self.logger.error(f"Max retries reached for loading stock features for date: {self.date}. Skipping...")
+                    is_done = True
+                else:
+                    self.logger.info("Retrying in 60 seconds...")
+                    sleep(60)
 
         self.logger.info(f"Finish load stock features for date: {self.date}")

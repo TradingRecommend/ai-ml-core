@@ -44,6 +44,19 @@ class StockFeatureRepository:
         finally:
             session.close()
 
+    def delete_by_date(self, date: str) -> None:
+        """
+            Delete stock features that have (date, symbol) matching any labels in the list.
+        """
+        session = self.db_manager.Session()
+        try:
+            session.query(StockFeatureEntity).filter(
+                StockFeatureEntity.date == date
+            ).delete(synchronize_session=False)
+            session.commit()
+        finally:
+            session.close()
+
     def get_all(self) -> List[StockFeatureEntity]:
         """Retrieve all feature entities."""
         session = self.db_manager.Session()
