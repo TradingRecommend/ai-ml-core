@@ -7,7 +7,7 @@ pandas-ta==0.4.67b0
 
 # The rest of your stack
 vnstock==3.2.6
-mlflow==2.21.1
+# mlflow==2.21.1
 scikit-learn==1.7.1
 statsmodels==0.14.5
 SQLAlchemy==2.0.41
