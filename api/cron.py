@@ -8,6 +8,7 @@ from src.services.etl.stock.etl_prediction_feature import ETLPredictionStockFeat
 from src.services.noti.stock.telegram import StockTelegramNotifier
 from src.services.prediction.composite import PredictionComposite
 from src.services.prediction.stock.stock_logistic_prediction import StockLogisticPrediction
+os.environ["HOME"] = "/tmp"
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
