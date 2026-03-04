@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import joblib
 # import mlflow
 import pandas as pd
-from config.constants import STOCK_LOGISTIC_FEATURES, ModelName, ModelStage
+from src.config.constants import STOCK_LOGISTIC_FEATURES, ModelName, ModelStage
 from src.config.logger import Logger
 from src.repository.prediction_result import PredictionResultRepository
 from src.repository.stock_feature import StockFeatureRepository
